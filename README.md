@@ -1,102 +1,73 @@
+# Stability of Fault Predictions Using Triangulated Models of Homoclinal Interfaces
 
-![subsurfacebreaks](https://github.com/user-attachments/assets/5d12f127-ac5c-474f-9a0d-e8127086b457)
+## Context & Background
+This repository extends the research presented in **[SubsurfaceBreaks v. 1.0 (Michał Michalak, 2025)](https://github.com/michalmichalak997/SubsurfaceBreaks)**. It introduces and evaluates two additional data scaling methods to assess the stability of fault predictions and to explore alternative approaches that yield specific results.
 
+## Methodology Overview
+This project compares three distinct approaches to data scaling (referred to as `SS_MODE` in the code):
 
+* **Method 1 (Original):** The global scaling technique used in the original research.
+* **Method 2 (Per-Surface):** A localized scaling technique applied individually to each geological surface/file. This method requires an ordered split of data to prevent leakage.
+* **Method 3 (Standard ML):** A standard machine learning approach where the scaler is fitted strictly on the training set and applied to the test set.
 
+## Repository Content (additional)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14660007.svg)](https://doi.org/10.5281/zenodo.14660007)
-# SubsurfaceBreaks v. 1.0
+### Experiments
+* **`DataScalingMethods/ss_experiment_1_check_if_stable.ipynb`**
+    * **Active Modes:** Method 1 & Method 3.
+    * Performs the 'stability' experiment using random train-test splits.
+* **`DataScalingMethods/ss_experiment_4_check_if_stable_ordered_split_downsampling.ipynb`**
+    * **Active Mode:** Method 2.
+    * Performs the 'stability' experiment using **ordered splits** to accommodate the per-surface scaling logic.
 
-This software is intended to detect faults on subsurface homoclinal interfaces. The software consists of three programs:
+### Statistical Analysis
+* **`DataScalingMethods/ss_experiment_0_scrap_data.ipynb`**
+    * Loads input data and generates raw datasets (variables) required for the statistical analysis.
+* **`DataScalingMethods/ss_experiment_2_compare_parameters.ipynb`**
+    * Performs statistical analysis of the transformed data (normality tests, variance comparison, mean equality).
+    * **Note:** Preliminary results indicate that normality assumptions are violated, affecting the interpretation of standard parametric tests (e.g., Student's t-test).
 
-1. Generating labelled synthetic interfaces based on random parameters with bounds introduced by a user (C++).
-2. Detecting faults for synthetic interfaces using Support Vector Machine algorithm (Python).
-3. Detecting faults for real interfaces with calculated attributes (C++).
+## Experiment Workflow
 
-We will now explain the components of the framework.
+### Core Logic
+The workflow follows the pipeline established in the parent repository:
+1.  **Preprocessing:** Data cleaning, feature extraction (neighbor sorting), and selection.
+2.  **Scaling (`SS_MODE`):** The key variable in this research.
+    * *Notebook 1* handles global approaches (Modes 1 & 3).
+    * *Notebook 4* handles the local approach (Mode 2), necessitating a different splitting strategy (Ordered Split) to avoid data leakage.
+3.  **Modeling:** Support Vector Machine (SVM) is used as the baseline classifier.
+4.  **Stability Testing:** The model predicts faults on a real-world dataset (Homocline vs. Fault). A subset of this data is then isolated, scaled, and predicted again. Discrepancies between the global prediction and the subset prediction are flagged as "unstable."
 
-## ad. 1 Generating labelled synthetic interfaces based on random parameters with bounds introduced by a user.
+### Data Scaling Schemas
+The following diagrams illustrate the data flow for each scaling method derived from the original and alternative proposals.
 
-The first piece of software (Broken_synthetic_subsurface_slopes) uses CGAL library to generate an arbitrary number of geological homoclines with calculated attributes. The homoclines are represented as triangulated interfaces and the analysis is done for the faces of the triangulation. The calculated attributes can represent either local geometric attributes such as the orientation of normal and dip vectors or neighborhood analysis including distances between a specific triangle and its neighbors. The user should specify the bounds which determine ranges of intervals for the parameters. Then, random numbers from the uniform distribution are created from the determined intervals. We suggest giving ranges that best mimic the real subsurface slopes to be analyzed in the third step.
+**Method 1 (Global / Original)**
+<img width="1045" alt="Method 1 Schema" src="https://github.com/user-attachments/assets/b27c562e-b816-43fc-a735-f5b3a2dbc83f" />
 
-![synthetic_terrain_generation_major_revision_01_2025](https://github.com/user-attachments/assets/824fd7a2-71d5-4088-b5d0-34c858b95c59)
+**Method 2 (Per-Surface / Local)**
+<img width="1045" alt="Method 2 Schema" src="https://github.com/user-attachments/assets/b405a5be-7cba-4469-b922-162fd2ca0a5c" />
 
+**Method 3 (Standard ML Pipeline)**
+<img width="1045" alt="Method 3 Schema" src="https://github.com/user-attachments/assets/e49664d6-bdf3-45e2-840f-17523299e9ab" />
 
-In the attached screenshot, we can see that the user requested 300 files (interfaces). Then, the size of the slope (interface) is constant because the lower bound (1) is equal to the upper bound (1). The dip angle will not be constant: it will vary between 2 and 5 degrees. Next, the dip direction will also vary between 40 and 70 degrees. The number of points in the triangulated model of the slope will be the same (100). The noise applied to the surface will be a fraction (1-4%) of the elevation difference of the slope. The fault throw will be a fraction (5-10%) of the maximum elevation difference within the triangulated slope. 
+## Visualization of Results
+The experiment produces visualizations identifying "unstable" observations—points where the model's classification changes depending on the context (entire dataset vs. subset).
 
-![program1_documentation1](https://github.com/michalmichalak997/MLgeom/assets/28152295/3e65ad31-5762-4810-ba8b-ead86269f08d)
+<img width="1229" alt="Stability Result Example" src="https://github.com/user-attachments/assets/75bac653-b251-48bf-8f57-61a45c50e73b" />
 
-Here, we can see a portion of the dataframe resulting from running the first program. Each row corresponds to a triangle of the triangulation, and the key element is the label (-1 or 1) which distinguishes between fault-related and fault-unrelated triangles.
+## Configuration Constants
+The experiments are controlled by the following constants, ensuring reproducibility and consistency with the original research:
+* `INPUT_PATH`, `REAL_DATA_FILE`: References to the original datasets.
+* `RANDOM_STATE`: Set to `42`.
+* `SS_MODE`: Selects the standard scaling method (1, 2, or 3).
+* Bounding Box Constants (`X_C_LOWER`, etc.): Define the spatial subset used for stability testing.
 
-## ad. 2 Detecting faults for synthetic data. 
+## Critical Implementation Notes
+To ensure exact reproducibility and maintain logic separation, the following technical constraints apply:
 
-A Python script (Broken_subsurface_slopes_training_testing_evaluating_revision) is used to apply Support Vector Machine to the synthetic data set. 
-
-![program2_documentation](https://github.com/michalmichalak997/MLgeom/assets/28152295/6276cee8-caaa-4c60-8c44-8480e2d6599b)
-
-The above screenshot presents the key step in the data preparation for supervised classification: the distances with neighbors are sorted (Angle_Max, Angle_Min, Angle_intermediate). This ensures that we eliminate randomness from the analysis, since the initial indices of the neighbors (first, second, third) correspond only to the counterclockwise order of the neighbors (https://graphics.stanford.edu/courses/cs368-04-spring/manuals/CGAL_Tutorial.pdf).
-
-## ad. 3 Detecting faults for real slopes with calculated attributes.
-
-To finish the fault detection pipeline, the user must calculate slope attributes for real data. The program from the first step cannot be used because it was intended to create synthetic slopes with labels. And our objective is now to use the fine-tuned program from step 2 to predict fault-related triangles for real data based on geometric attributes (orientation of normal/dip vectors with neighborhood analysis). Please use the "Broken_real_subsurface_slopes" code to calculate attributes for your real data. You will need to remove the first line "Index of the surface:0" from the "_output" file to proceed with the Python script.
-
-## Software used.
-
-CGAL library v. 4.8.
-CMake (3.28.2)
-Microsoft Visual Studio 2022.
-Microsoft  Visual C++ 2015-2022 Redistributable (x64) - 14.38.33135.
-
-### For running executables:
-
-To allow portability of the programs, the C++ computer code can be compiled in Release mode to generate executables. 
-The executables were run on a Windows virtual machine: Windows 10 Home, x64, Version: 22H2, OS build 19045.3803, RAM: 2048 MB.  Additionally, the following software is necessary to run the executables: Microsoft  Visual C++ 2015-2022 Redistributable (x64) - 14.38.33135. In the directory with the executable, there should be the libgmp-10.dll file available. This file is attached in this repository.
-
-## Installation. 
-
-The user has to install the CGAL library to run the attached computer codes specified in points 1 and 3. Newer versions of the CGAL library can be installed using the vcpkg manager (https://www.cgal.org/download/windows.html). However, since we use the 4.8 version, this option may not be available. And we do not guarantee that the computer code will be correctly executed with newer versions of CGAL (>4.8). Therefore, the best solution would be to install the CGAL (4.8) library using CMake GUI (3.28.2). We note that to use the programs, it is not mandatory to have QT installation completed.
-
-## Tests 
-
-To increase quality of the created programs, we performed tests with regard to the critical elements of the framework. They are described below and attached in the catalogue as well :
-
-1. It tests whether the points are sorted according to the Z (elevation) value. It is achieved using lambda expressions. This is important in terms of calculating the random fractions of the elevation differences used to determine noise and fault throw levels.
-![test_program_points](https://github.com/michalmichalak997/MLgeom/assets/28152295/0d85ab54-2150-4b5f-bbc6-d2d75195db6f)
-
-As can be seen, the program properly sorted points according to the elevation. 
-
-2. It tests whether the orientations supplied in the dip angle/dip direction format are properly converted into vector Cartesian coordinates by back-converting the vectors into the dip angle/dip direction format. A toleration for deviations double eps=0.01 due to floating-point round-off errors is introduced.
-
-![test_program_converted2](https://github.com/michalmichalak997/MLgeom/assets/28152295/f052e2a3-63fd-495a-99b7-a44ad10582b0)
-
-As can be seen, angles 3 and 363 are considered equal. This is to allow users to sample from intervals crossing N (360=0) direction. For example, the left range of the azimuth can be 355 and the right range can be 5 (which is equal to 365). 
-
-3. It tests whether the distances calculated in C++ program are equal to those calculated in R. For Euclidean and cosine distances the differences are very small (E-06). For angular distances the errors are greater (E-04-E-02). This effect can be likely attributed to different implementations of acos() function between C++ and R. We believe that the errors are not significant and can be tolerated for geological applications such as detecting faults on geological slopes. However, if precision is critical, we suggest rewriting the code using other types, for example long double instead of double.
-
-![image](https://github.com/michalmichalak997/MLgeom/assets/28152295/19e77aa5-965c-4052-83a5-12ea19cd6467)
-
-Here, we can see that the differences for cosine distance between C++ and R are very small. 
-
-![test_distances_r2](https://github.com/michalmichalak997/MLgeom/assets/28152295/0fc99891-f976-426c-a3ee-40f96f6b4ac6)
-
-Here, we can see that the differences for angular distance are greater, probably due to different implementations of acos() function between C++ and R.
-
-4. Calculation of distances between a triangle and its neighbors. We prepared 6 data points resulting in a triangulation 4 faces. We compared the results with those obtained in a spreadsheet. We didn't obtain any serious issues with the results. We note that the dip vector representation is not applicable for horizontal observations because the dip vector is not uniquely defined. Therefore, distances calculated for dip-vector-representations of horizontal observations are invalid. To create greater awareness of this problem, dip vectors of horizontal observations are represented as [-9999,-9999,-9999]. The code, reports and the spreadsheet are attached as separate files.
-
-![test_4-points](https://github.com/michalmichalak997/MLgeom/assets/28152295/66db07ce-5571-417e-9447-95f6ddb398af)
-
-A sketch of the distribution of the data points. In the central part, there is a triangle which is the only triangle having more than one finite neighbor.
-
-
-![test_4](https://github.com/michalmichalak997/MLgeom/assets/28152295/dffd7160-4be2-47b2-b19f-899ad8b50509)
-
-Here, we can see that the triangle has only one finite neighbor. This finite neighbor is a horizontal triangle. Therefore, its dip vector has the following form:  [-9999,-9999,-9999].
-
-
-
-5. Visual inspection of collinearity
-   
-![collinearity](https://github.com/michalmichalak997/MLgeom/assets/28152295/8b58fb5b-8045-4e06-82b7-c39590f2f43f)
-
-Here, we can see that the coefficient of collinearity (DOC) meets the expectations of pointing to both equilateral (DOC around 0.5) and collinear configurations (DOC close to 1.0).
-
+1.  **Data Loading Order:** Input files are loaded using a strict numerical iterator (`range(1000)`) rather than default filesystem alphabetical ordering. This ensures the data sequence matches the original paper exactly, which is crucial for the split logic.
+2.  **Model Selection (Baseline vs. Grid Search):** The code includes a complete implementation of `GridSearchCV`. However, it is **not executed**. To ensure the results are comparable with the parent research, the model hyperparameters are hardcoded (they are identified as optimal in the original paper).
+3.  **Downsampling Strategy:**
+    * *Notebook 1 (Global):* Uses standard random downsampling applied to the entire dataset.
+    * *Notebook 4 (Local):* Uses a per-file downsampling strategy to maintain class balance within specific geological regions, which is necessary for the Per-Surface scaling method.
+4.  **Controlled Code Redundancy:** The notebooks contain implementation logic for valid scaling modes from other notebooks (e.g., Method 2 code exists in Notebook 1). This is a known technical debt retained for reference. It is kept **under strict control** via assertion cells (e.g., `raise ValueError`) at the beginning of execution, preventing the use of incompatible methods in the wrong environment.
