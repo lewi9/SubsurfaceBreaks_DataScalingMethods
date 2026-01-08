@@ -51,7 +51,7 @@ The following diagrams illustrate the data flow for each scaling method derived 
 <img width="1045" alt="Method 3 Schema" src="https://github.com/user-attachments/assets/e49664d6-bdf3-45e2-840f-17523299e9ab" />
 
 ## Visualization of Results
-The experiment produces visualizations identifying "unstable" observations—points where the model's classification changes depending on the context (entire dataset vs. subset).
+The experiment produces visualizations identifying "unstable" observations-points where the model's classification changes depending on the context (entire dataset vs. subset).
 
 <img width="1229" alt="Stability Result Example" src="https://github.com/user-attachments/assets/75bac653-b251-48bf-8f57-61a45c50e73b" />
 
