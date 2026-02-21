@@ -41,13 +41,13 @@ The workflow follows the pipeline established in the parent repository:
 ### Data Scaling Schemas
 The following diagrams illustrate the data flow for each scaling method derived from the original and alternative proposals.
 
-**Method 1 (Global / Original)**
+**Method 1 (Independent subset scaling)**
 <img width="1045" alt="Method 1 Schema" src="https://github.com/user-attachments/assets/b27c562e-b816-43fc-a735-f5b3a2dbc83f" />
 
-**Method 2 (Per-Surface / Local)**
+**Method 2 (Per-surface local scaling)**
 <img width="1045" alt="Method 2 Schema" src="https://github.com/user-attachments/assets/b405a5be-7cba-4469-b922-162fd2ca0a5c" />
 
-**Method 3 (Standard ML Pipeline)**
+**Method 3 (Canonical ML scaling)**
 <img width="1045" alt="Method 3 Schema" src="https://github.com/user-attachments/assets/e49664d6-bdf3-45e2-840f-17523299e9ab" />
 
 ## Visualization of Results
