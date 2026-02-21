@@ -6,9 +6,9 @@ This repository extends the research presented in **[SubsurfaceBreaks v. 1.0 (Mi
 ## Methodology Overview
 This project compares three distinct approaches to data scaling (referred to as `SS_MODE` in the code):
 
-* **Method 1 (Original):** The global scaling technique used in the original research.
-* **Method 2 (Per-Surface):** A localized scaling technique applied individually to each geological surface/file. This method requires an ordered split of data to prevent leakage.
-* **Method 3 (Standard ML):** A standard machine learning approach where the scaler is fitted strictly on the training set and applied to the test set.
+* **Method 1 (Independent subset scaling):** The global scaling technique used in the original research.
+* **Method 2 (Per-surface local scaling):** A localized scaling technique applied individually to each geological surface/file. This method requires an ordered split of data to prevent leakage.
+* **Method 3 (Canonical ML scaling):** A standard machine learning approach where the scaler is fitted strictly on the training set and applied to the test set.
 
 ## Repository Content (additional)
 
